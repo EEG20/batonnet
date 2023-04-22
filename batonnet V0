@@ -1,0 +1,28 @@
+from random import * 
+from colorama import *
+pseudo = input("quelle sera ton pseudo ?")
+while True :
+    base= 20
+    while True:
+        enlever = randint(1,3)
+        base -= enlever
+        print(f"le robot a enlevé {enlever} il reste {base} batonnets")
+        if base<1 :
+            print(Fore.RED,f"le robot a perdu",Fore.RESET)
+            break
+        elif base == 1:
+            print(Fore.GREEN ,f"le robot a gagné", Fore.RESET)
+        demande = int(input("tu enleve combient entre 1 2 ou 3 ?"))
+        base -= demande
+        print(f"{pseudo} a enlevé {demande} il reste {base} batonnets")
+        if base<1 :
+            print(Fore.RED,f"{pseudo}a perdu",Fore.RESET)
+            break
+        elif base == 1:
+            print(Fore.GREEN ,f"{pseudo} a gagné", Fore.RESET)
+            break
+    a = input("tu veut recommancer ?")
+    if a == "oui" or a == "OUI" or a == "Oui" :
+        continue
+    else :
+        exit()

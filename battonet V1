@@ -1,0 +1,83 @@
+from random import * 
+from colorama import *
+
+
+
+typedejeux = input("""
+solo :
+multi :
+""")
+if typedejeux == "solo" or typedejeux == "SOLO":
+    pseudo = input("quelle sera ton pseudo ?")
+    pointrobot = 0
+    pointjoueur = 0
+    while True :
+        base= 20
+        while True:
+            enlever = randint(1,3)
+            base -= enlever
+            print(f"le robot a enlevé {enlever} il reste {base} batonnets")
+            if base<1 :
+                print(Fore.RED,f"le robot a perdu",Fore.RESET)
+                pointjoueur +=1
+                break
+            elif base == 1:
+                print(Fore.GREEN ,f"le robot a gagné", Fore.RESET)
+                pointrobot +=1
+                break
+            demande = int(input("tu enleve combient entre 1 2 ou 3 ?"))
+            base -= demande
+            print(f"{pseudo} a enlevé {demande} il reste {base} batonnets")
+            if base<1 :
+                print(Fore.RED,f"{pseudo}a perdu",Fore.RESET)
+                pointrobot+=1
+                break
+            elif base == 1:
+                print(Fore.GREEN ,f"{pseudo} a gagné", Fore.RESET)
+                pointjoueur +=1
+                break
+        print(f"le robot à {pointrobot} point et {pseudo} à {pointjoueur}")
+        a = input("tu veut recommancer ?")
+        if a == "oui" or a == "OUI" or a == "Oui" :
+            continue
+        else :
+            exit()
+if typedejeux == "multi" or "MULTI" :
+    pseudo1 = input("joueur 1 quelle sera ton pseudo ?")
+    pseudo2 = input("joueur 2 quelle sera ton pseudo ?")
+    pointjoueur1 = 0
+    pointjoueur2 = 0
+    while True :
+        base= 20
+        while True:
+            
+            demande1= int(input(f"{pseudo1} tu enleve combient entre 1 2 ou 3 ?"))
+            base -= demande1
+            print(f"{pseudo1} a enlevé {demande1} il reste {base} batonnets")
+            if base<1 :
+                print(Fore.RED,f"{pseudo1} a perdu",Fore.RESET)
+                pointjoueur2 +=1
+                break
+            elif base == 1:
+                print(Fore.GREEN ,f"{pseudo1} a gagné", Fore.RESET)
+                pointjoueur1 +=1
+                break
+            demande2 = int(input(f"{pseudo2} tu enleve combient entre 1 2 ou 3 ?"))
+            base -= demande2
+            print(f"{pseudo2} a enlevé {demande2} il reste {base} batonnets")
+            if base<1 :
+                print(Fore.RED,f"{pseudo2}a perdu",Fore.RESET)
+                pointjoueur1+=1
+                break
+            elif base == 1:
+                print(Fore.GREEN ,f"{pseudo2} a gagné", Fore.RESET)
+                pointjoueur2 +=1
+                break
+        print(f"{pseudo1} à {pointjoueur1}  point et {pseudo2} à {pointjoueur2}")
+        a = input("tu veut recommancer ?")
+        if a == "oui" or a == "OUI" or a == "Oui" :
+            continue
+        else :
+            exit()
+
+

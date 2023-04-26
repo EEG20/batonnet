@@ -30,7 +30,7 @@ def ai_turn(sticks, q_table, epsilon, last_action):
             if not best_actions:
                 return random.choice([a for a in possible_actions if a <= sticks])
             else:
-                # Ajouter cette ligne pour stocker l'action choisie pour le prochain tour
+                
                 last_action = random.choice([a for a in best_actions if a <= sticks])
                 if last_action <= sticks - 1: # Vérifier si le joueur a laissé 1 bâtonnet ou pas
                     return last_action
@@ -38,7 +38,7 @@ def ai_turn(sticks, q_table, epsilon, last_action):
                     return random.choice([a for a in possible_actions if a <= sticks])
 
 def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
-    # Calculer la nouvelle valeur Q pour l'état actuel et l'action prise
+    
     current_q = q_table[state][action]
     next_actions = [a for a in [1, 2, 3] if a <= next_state]
     if next_state == 0:
@@ -46,38 +46,38 @@ def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
     else:
         next_value = max([q_table[next_state][a] for a in next_actions])
     new_q = current_q + alpha * (reward + gamma * next_value - current_q)
-    # Mettre à jour la table Q
+    
     q_table[state][action] = new_q
 
 def play_game_rl(num_games=1000):
     last_action = None
-    sticks = 20 # Vous pouvez changer le nombre de bâtonnets ici
+    sticks = 20 
     q_table = {}
 
     for i in range(1, sticks+1):
-        q_table[i] = {1: 0, 2: 0, 3: 0} # Initialiser toutes les valeurs Q à 0
-    epsilon = 0.1 # Vous pouvez changer la valeur d'epsilon ici
-    alpha = 0.5 # Vous pouvez changer la valeur d'alpha ici
-    gamma = 0.9 # Vous pouvez changer la valeur de gamma ici
-    min_sticks = 1 # Vous pouvez changer le nombre minimum de bâtonnets que l'on peut prendre ici
+        q_table[i] = {1: 0, 2: 0, 3: 0} 
+    epsilon = 0.1 
+    alpha = 0.5 
+    gamma = 0.9 
+    min_sticks = 1 
 
     for i in range(num_games):
         sticks_left = sticks
         current_player = 1
-        while sticks_left > 1: # Modifier la condition pour éviter d'avoir 1 bâtonnet restant
+        while sticks_left > 1:
             action = ai_turn(sticks_left, q_table, epsilon, last_action)
             if action < min_sticks:
                 action = min_sticks
             sticks_left -= action
             if sticks_left <= 0:
-                sticks_left = 1 # Ajouter un bâtonnet pour éviter qu'il ne reste 0 bâtonnet
-                sticks += 1 # Mettre à jour le nombre total de bâtonnets
+                sticks_left = 1 
+                sticks += 1 
             #print("Joueur", current_player, "a pris", action, "bâtonnet(s) il reste" ,sticks_left)
             if current_player == 1:
                 current_player = 2
             else:
                 current_player = 1
-            # Mettre à jour l'action choisie pour le prochain tour
+            
             last_action = action
 
         #print("La partie est terminée, le joueur", current_player, "a gagné !")
@@ -107,7 +107,4 @@ def determine_winner(q_table):
         return 1
     else:
         return 2
-
-
-# Lancer le jeu avec l'apprentissage par renforcement
 main()

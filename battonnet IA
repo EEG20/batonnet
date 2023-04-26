@@ -1,0 +1,113 @@
+import random
+
+def ai_turn(sticks, q_table, epsilon, last_action):
+    if last_action is None:
+        last_action = 0
+    if sticks <= 1:
+        return 1
+    else:
+        possible_actions = [1, 2, 3]
+        if sticks < 4:
+            possible_actions = [1, 2]
+        best_actions = []
+        max_value = -float("inf")
+        for a in possible_actions:
+            if a > sticks:
+                continue
+            if sticks - a in q_table:
+                value = q_table[sticks - a].get(a, 0)
+            else:
+                value = 0
+
+            if value > max_value:
+                best_actions = [a]
+                max_value = value
+            elif value == max_value:
+                best_actions.append(a)
+        if random.uniform(0, 1) < epsilon:
+            return random.choice([a for a in possible_actions if a <= sticks])
+        else:
+            if not best_actions:
+                return random.choice([a for a in possible_actions if a <= sticks])
+            else:
+                # Ajouter cette ligne pour stocker l'action choisie pour le prochain tour
+                last_action = random.choice([a for a in best_actions if a <= sticks])
+                if last_action <= sticks - 1: # Vérifier si le joueur a laissé 1 bâtonnet ou pas
+                    return last_action
+                else:
+                    return random.choice([a for a in possible_actions if a <= sticks])
+
+def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
+    # Calculer la nouvelle valeur Q pour l'état actuel et l'action prise
+    current_q = q_table[state][action]
+    next_actions = [a for a in [1, 2, 3] if a <= next_state]
+    if next_state == 0:
+        next_value = 0
+    else:
+        next_value = max([q_table[next_state][a] for a in next_actions])
+    new_q = current_q + alpha * (reward + gamma * next_value - current_q)
+    # Mettre à jour la table Q
+    q_table[state][action] = new_q
+
+def play_game_rl(num_games=1000):
+    last_action = None
+    sticks = 20 # Vous pouvez changer le nombre de bâtonnets ici
+    q_table = {}
+
+    for i in range(1, sticks+1):
+        q_table[i] = {1: 0, 2: 0, 3: 0} # Initialiser toutes les valeurs Q à 0
+    epsilon = 0.1 # Vous pouvez changer la valeur d'epsilon ici
+    alpha = 0.5 # Vous pouvez changer la valeur d'alpha ici
+    gamma = 0.9 # Vous pouvez changer la valeur de gamma ici
+    min_sticks = 1 # Vous pouvez changer le nombre minimum de bâtonnets que l'on peut prendre ici
+
+    for i in range(num_games):
+        sticks_left = sticks
+        current_player = 1
+        while sticks_left > 1: # Modifier la condition pour éviter d'avoir 1 bâtonnet restant
+            action = ai_turn(sticks_left, q_table, epsilon, last_action)
+            if action < min_sticks:
+                action = min_sticks
+            sticks_left -= action
+            if sticks_left <= 0:
+                sticks_left = 1 # Ajouter un bâtonnet pour éviter qu'il ne reste 0 bâtonnet
+                sticks += 1 # Mettre à jour le nombre total de bâtonnets
+            #print("Joueur", current_player, "a pris", action, "bâtonnet(s) il reste" ,sticks_left)
+            if current_player == 1:
+                current_player = 2
+            else:
+                current_player = 1
+            # Mettre à jour l'action choisie pour le prochain tour
+            last_action = action
+
+        #print("La partie est terminée, le joueur", current_player, "a gagné !")
+
+    return q_table
+
+
+def main():
+    n_games = 1000
+    p1_wins = 0
+    p2_wins = 0
+
+    for i in range(n_games):
+        q_table = play_game_rl()
+        winner = determine_winner(q_table)
+        if winner == 1:
+            p1_wins += 1
+        else:
+            p2_wins += 1
+
+    print("Joueur 1 a gagné", p1_wins, "parties sur", n_games, "(", p1_wins/n_games*100, "% de victoires)")
+    print("Joueur 2 a gagné", p2_wins, "parties sur", n_games, "(", p2_wins/n_games*100, "% de victoires)")
+
+
+def determine_winner(q_table):
+    if q_table[1][1] > q_table[1][2]:
+        return 1
+    else:
+        return 2
+
+
+# Lancer le jeu avec l'apprentissage par renforcement
+main()

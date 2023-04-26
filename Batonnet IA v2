@@ -1,195 +1,90 @@
-import random
+import random #pour faire les action aléatoire
 
-def ai_turn(sticks, q_table, epsilon, last_action):
-    if last_action is None:
-        last_action = 0
-    if sticks <= 1:
-        return 1
-    else:
-        possible_actions = [1, 2, 3]
-        if sticks < 4:
-            possible_actions = [1, 2]
-        best_actions = []
-        max_value = -float("inf")
-        for a in possible_actions:
-            if a > sticks:
-                continue
-            if sticks - a in q_table:
-                value = q_table[sticks - a].get(a, 0)
-            else:
-                value = 0
-
-            if value > max_value:
-                best_actions = [a]
-                max_value = value
-            elif value == max_value:
-                best_actions.append(a)
-        if random.uniform(0, 1) < epsilon:
-            return random.choice([a for a in possible_actions if a <= sticks])
+def ai_turn(sticks, q_table, epsilon, last_action): #définie l'ia (nombre de batonnet , la table Q (expliqué après) ,la valeur epsilon(a voir après), et sa derniere action)
+    if last_action is None: #si il y a pas d'action avant
+        last_action = 0 #il met la valeur action a 0
+    possible_actions = [1, 2, 3] #indique les action possible dans ce cas ennlever 1 2 ou 3 batonnet
+    if sticks < 4: #si il y a 4 stick le plus logique sa serais de faire 1 ou 2 car sinon il perd directement
+        possible_actions = [1, 2] #il est possible de faire sois 1 sois 2
+    best_actions = [] #c'est une liste vide pour stocker les meilleur action (ayant une bonne valeur Q)
+    max_value = -float("inf") #sa initialise la valeur max de Q pour que la premiere valeur de Q sois supérieur
+    for a in possible_actions: #parcour toute les action possible
+        if a > sticks: #sa vérifie si l'action et possible par exemple il reste 7 batonnet il peut faire -3 ou pas ? 
+            continue #si c'est supérieur sa va ignoré et passé a un nombre inférieur
+        if sticks - a in q_table: #Vérifie si le nombre de bâtonnets restants après avoir effectué cette action est présent dans la table Q.
+            value = q_table[sticks - a].get(a, 0) #si oui il la valeur Q pour l'action
         else:
-            if not best_actions:
+            value = 0 #sinon initialise la valeur Q à 0.
+
+            if value > max_value: #si la valeur Q et supéérieur a la valeur maximal de Q (meilleur qualité)
+                best_actions.append(a) #on ajoute l'action actuelle a cette liste
+                max_value = value #metre a jour la valeur max de Q
+            elif value == max_value: #si la valeur de Q est égal a la valeur maximal de Q
+                best_actions.append(a) #on ajoute l'action actuelle a cette liste
+        if random.uniform(0, 1) < epsilon: #random.uniform(0,1) sert a généré un nombre aléatoire décimal entre 0 et 1 par exemple 0.45 si epsilon et au dessus
+            return random.choice([a for a in possible_actions if a <= sticks]) #choisit une action au hasard parmi les actions possibles (mais inférieure ou égale au nombre de bâtonnets restants) pour explorer de nouveaux états(nombre de bâtonnets restants après avoir effectué cette action)
+        else: # Sinon, l'IA prend une décision basée sur les valeurs Q actuelles.
+            if not best_actions: #Si aucune action n'a une valeur Q positive l'IA choisit une action au hasard pour éviter de bloquer le jeu.
                 return random.choice([a for a in possible_actions if a <= sticks])
-            else:
+            else: # Sinon, l'IA choisit l'une des meilleures actions en fonction des valeurs Q.
                 
-                last_action = random.choice([a for a in best_actions if a <= sticks])
-                if last_action <= sticks - 1: # Vérifier si le joueur a laissé 1 bâtonnet ou pas
-                    return last_action
-                else:
+                last_action = random.choice([a for a in best_actions if a <= sticks]) #vhoisit une des meilleures actions au hasard.
+                if last_action <= sticks - 1: # vérifier si le joueur a laissé 1 batonnet ou pas
+                    return last_action #si c'est le cas sa effectue l'action
+                else: #Sinon, choisit une action aléatoire pour éviter de bloquer le jeu.
                     return random.choice([a for a in possible_actions if a <= sticks])
 
-def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
+def update_q_table(q_table, state, action, reward, next_state, alpha, gamma): #moteur d'apprentisages (la table Q , l'état actuel(contexte du  jeux) , l'action qui a été effectué , la récompense recu de l'action , l'état suivant , le taux d'apprentissage alpha , le facteur de remise gamma)
     
-    current_q = q_table[state][action]
-    next_actions = [a for a in [1, 2, 3] if a <= next_state]
-    if next_state == 0:
-        next_value = 0
+    current_q = q_table[state][action] #récupère la valeur Q actuelle de l'état et de l'action dans la table Q
+    next_actions = [a for a in [1, 2, 3] if a <= next_state] #determine les actions possibles de l'état suivant en prenant en compte le nombre de batonnets restants
+    if next_state == 0: #si l'état suivant et égal a 0 sa veut dire qu'il ne peut plus effectué d'action
+        next_value = 0 #dans ce cas la valeur de la table Q pour l'état suivant est de 0 car il y aura plus de récompense à recevoir
     else:
-        next_value = max([q_table[next_state][a] for a in next_actions])
-    new_q = current_q + alpha * (reward + gamma * next_value - current_q)
+        next_value = max([q_table[next_state][a] for a in next_actions]) #détermine la valeur Q maximale pour les actions possibles à partir de l'état suivant
+    new_q = current_q + alpha * (reward + gamma * next_value - current_q) #Calcule la nouvelle valeur Q en utilisant la formule de mise à jour Q-learning : Q(s, a) ← Q(s, a) + α(r + γmax(Q(s', a')) - Q(s, a)).
     
-    q_table[state][action] = new_q
+    q_table[state][action] = new_q #Met à jour la valeur Q de l'état et de l'action donnés dans la table Q avec la nouvelle valeur Q calculée.
 
-def play_game_rl(num_games=100):
-    p1_wins = 0
-    p2_wins = 0
+def play_game_rl(num_games): #jeux (le nombre de partie jouer)
+    p1_wins = 0 #nombre de victoire du joueur 1
+    p2_wins = 0 #nombre de victoire du joueur 2
 
-    for i in range(num_games):
-        last_action = None
-        sticks = 20 
-        q_table = {}
+    for i in range(num_games): #permet de jouer les parties
+        last_action = None #action éffectué par le joeur précédent vu que il commance il y a pas
+        sticks = 20 #inisialise le nombre de battonet
+        q_table = {} #crée une table Q vide qui sera remplie au fur et à mesure que l'algorithme Q-learning s'exécutera.
 
-        for i in range(1, sticks+1):
-            q_table[i] = {1: 0, 2: 0, 3: 0} 
-        epsilon = 0.1 
-        alpha = 0.5 
-        gamma = 0.9 
-        min_sticks = 1 
-        sticks_left = sticks
-        current_player = 1
+        for i in range(1, sticks+1): #cette boucle va initialiser la table Q Elle itère sur chaque état possible (i allant de 1 à sticks)
+            q_table[i] = {1: 0, 2: 0, 3: 0} #pour chaque état, elle initialise un dictionnaire contenant les trois actions possibles (1, 2 et 3) avec une valeur de 0.
+        epsilon = 0.1 # paramètre qui détermine la probabilité pour que l'IA effectue une action aléatoire plutôt que de suivre ce quelle a apprise dans ce cas elle a 10% deffectuer une action aléatoire
+        alpha = 0.5 # taux d'apprentissage Il détermine dans quelle mesure les nouvelles informations doivent remplacer les anciennes informations dans la table Q dans ce cas l'ia accorde une importance égale aux nouvelles et aux anciennes informations
+        gamma = 0.9 # facteur de remise  Il détermine la valeur future que l'agent accorde aux récompenses dans ce cas il accorde une valeur élevée aux récompenses futures
+        min_sticks = 1 #nombre minimal de batonnet qu'on peut avoir
+        sticks_left = sticks #represente le nombre de batonnets restants dans le jeu
+        current_player = 1 #c'est le joueur dans ce cas c'est joueur 1
 
-        while sticks_left > 1:
-            action = ai_turn(sticks_left, q_table, epsilon, last_action)
-            if action < min_sticks:
-                action = min_sticks
-            sticks_left -= action
-            print("Joueur", current_player, "a pris", action, "bâtonnet(s) il reste" ,sticks_left)
-            if current_player == 1:
+        while sticks_left > 1: #boucle qui sarete quand le nombre de batonnet et inférieur à 1
+            action = ai_turn(sticks_left, q_table, epsilon, last_action) #la fonction est apeller (j'ai expliqué en haut)
+            if action < min_sticks: #vérifie si l'action et au moins égal a 1 batonnet
+                action = min_sticks #met la valeur au minimum si ce n'est pas respecté
+            sticks_left -= action  #enleve les batonnet que l'ia a choisie
+            #print(f"Joueur {current_player} a pris {action} batonnet il reste {sticks_left} batonnet") #affiche combient il a enlever et combient il reste de batonnet
+            if current_player == 1: #si c'est le joueur 1 il passe au 2
                 current_player = 2
-            else:
+            else: #sinon il passe à 1 car si ce n'est pas joueur 1 c'est joueur 2
                 current_player = 1
-            last_action = action
-
-        if current_player == 1:
-            p2_wins += 1
-            print("La partie est terminée, le joueur 2 a gagné !")
-        else:
-            p1_wins += 1
-            print("La partie est terminée, le joueur 1 a gagné !")
+            last_action = action #enregistre le coup éffectué par l'ia 
         
-
-    print("Joueur 1 a gagné", p1_wins, "parties sur", num_games, "(", p1_wins/num_games*100, "% de victoires)")
-    print("Joueur 2 a gagné", p2_wins, "parties sur", num_games, "(", p2_wins/num_games*100, "% de victoires)")
-
-
-
-import random
-
-def ai_turn(sticks, q_table, epsilon, last_action):
-    if last_action is None:
-        last_action = 0
-    if sticks <= 1:
-        return 1
-    else:
-        possible_actions = [1, 2, 3]
-        if sticks < 4:
-            possible_actions = [1, 2]
-        best_actions = []
-        max_value = -float("inf")
-        for a in possible_actions:
-            if a > sticks:
-                continue
-            if sticks - a in q_table:
-                value = q_table[sticks - a].get(a, 0)
-            else:
-                value = 0
-
-            if value > max_value:
-                best_actions = [a]
-                max_value = value
-            elif value == max_value:
-                best_actions.append(a)
-        if random.uniform(0, 1) < epsilon:
-            return random.choice([a for a in possible_actions if a <= sticks])
-        else:
-            if not best_actions:
-                return random.choice([a for a in possible_actions if a <= sticks])
-            else:
+        if sticks_left <= 1 : #si le nombre de battonnet et inférieur ou égal à 1
+            if current_player == 1: #si le joueur est 1 il a gagné car sa voudra dire que le joueur 2 a fait sois 1 sois moins donc il a perdu
+                p1_wins += 1 #gagne +1 de victoire
+                #print("La partie est terminée, le joueur 1 a gagné !") #message de victoire
                 
-                last_action = random.choice([a for a in best_actions if a <= sticks])
-                if last_action <= sticks - 1: # Vérifier si le joueur a laissé 1 bâtonnet ou pas
-                    return last_action
-                else:
-                    return random.choice([a for a in possible_actions if a <= sticks])
+            else: #si c'est pas le joueur 1 c'est le joueur 2
+                p2_wins += 1 #gagne +1 de  victoire
+                #print("La partie est terminée, le joueur 2 a gagné !") #message de victoire
+    print(f"Joueur 1 a gagné {p1_wins}({p1_wins/num_games*100} % de victoires)") #resultat final pour le joueur 1 avec le nombre de ses victoires est son poucentage de victoires
+    print(f"Joueur 2 a gagné {p2_wins} parties sur {num_games} ({p2_wins/num_games*100} % de victoires)") #resultat final pour le joueur 2 avec le nombre de ses victoires est son poucentage de victoires
 
-def update_q_table(q_table, state, action, reward, next_state, alpha, gamma):
-    
-    current_q = q_table[state][action]
-    next_actions = [a for a in [1, 2, 3] if a <= next_state]
-    if next_state == 0:
-        next_value = 0
-    else:
-        next_value = max([q_table[next_state][a] for a in next_actions])
-    new_q = current_q + alpha * (reward + gamma * next_value - current_q)
-    
-    q_table[state][action] = new_q
-
-def play_game_rl(num_games=100000):
-    p1_wins = 0
-    p2_wins = 0
-
-    for i in range(num_games):
-        last_action = None
-        sticks = 20 
-        q_table = {}
-
-        for i in range(1, sticks+1):
-            q_table[i] = {1: 0, 2: 0, 3: 0} 
-        epsilon = 0.1 
-        alpha = 0.5 
-        gamma = 0.9 
-        min_sticks = 1 
-        sticks_left = sticks
-        current_player = 1
-
-        while sticks_left > 1:
-            action = ai_turn(sticks_left, q_table, epsilon, last_action)
-            if action < min_sticks:
-                action = min_sticks
-            sticks_left -= action
-            #print("Joueur", current_player, "a pris", action, "bâtonnet(s) il reste" ,sticks_left)
-            if current_player == 1:
-                current_player = 2
-            else:
-                current_player = 1
-            last_action = action
-        
-        if sticks_left <= 1 :
-            if current_player == 1:
-                p1_wins += 1
-                #print("La partie est terminée, le joueur 1 a gagné !")
-                
-            else:
-                p2_wins += 1
-                #print("La partie est terminée, le joueur 2 a gagné !")
-                
-
-        
-
-    print("Joueur 1 a gagné", p1_wins, "parties sur", num_games, "(", p1_wins/num_games*100, "% de victoires)")
-    print("Joueur 2 a gagné", p2_wins, "parties sur", num_games, "(", p2_wins/num_games*100, "% de victoires)")
-
-
-
-
-
-play_game_rl()
+play_game_rl(100000) #apelle de la fonction pour lancer le jeux et permet de modifier le nombre de partie que l'on va faire
